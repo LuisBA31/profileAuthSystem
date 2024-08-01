@@ -43,7 +43,6 @@ function validControl() {
                 // El dispositivo existe y está validado 
                 // Se actualizan las sesiones
                 actualizarSesion();
-                // actualizarValor();
                 // Se actualizan los campos para asginar las sesión activa
                 validarSesion();
                 // Se redirecciona a la página principal
@@ -52,16 +51,15 @@ function validControl() {
                 break;
             case 2:
                 // El dispositivo existe y no está validado
-                // Se actualizan las sesiones
-                actualizarSesion();
-                // actualizarValor();
-                // Se crea un nuevo pin
-                $_SESSION["pin"] = obtenerPin();
-                // Se agrega una sesión
-                registrarSesion();
                 // Se revisa que no haya más de 4 intentos
                 if (revisarSesion()){
                     // Puede seguir intentando
+                    // Se actualizan las sesiones
+                    actualizarSesion();
+                    // Se crea un nuevo pin
+                    $_SESSION["pin"] = obtenerPin();
+                    // Se agrega una sesión
+                    registrarSesion();
                     // Se redirecciona al Pin form
                     header('Location: pinForm.php');
                 }else{
@@ -125,12 +123,19 @@ function revisarDisp() {
     try{
         $estado = 0;
         // Consulta del dispositivo
+        /*
         $queryDisp = "SELECT * FROM set_dispositivos 
         WHERE ip='" . $_SESSION["ip"] . "' 
         AND so='" . $_SESSION["so"] . "' 
         AND nav='" . $_SESSION["nav"] . "' 
         AND user=" . $_SESSION["user"] . " 
         AND fecha='" . $_SESSION["fecha"] . "';";
+        */
+        $queryDisp = "SELECT * FROM set_dispositivos 
+        WHERE ip='" . $_SESSION["ip"] . "' 
+        AND so='" . $_SESSION["so"] . "' 
+        AND nav='" . $_SESSION["nav"] . "' 
+        AND user=" . $_SESSION["user"] . ";";
         $resDisp = $conn->query($queryDisp);
         // Se revisa que exista un registro con ese dispositivo
         if ($resDisp->num_rows > 0){
