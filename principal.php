@@ -141,6 +141,7 @@ function sesionUsuario(){
 function restricSesionUsuario(){
     global $conn;
     try{
+        /*
         $queryDisp = "SELECT * FROM set_dispositivos 
         WHERE ip='" . $_SESSION["ip"] . "' 
         AND so='" . $_SESSION["so"] . "' 
@@ -148,6 +149,13 @@ function restricSesionUsuario(){
         AND user=" . $_SESSION["user"] . "
         AND token=" . $_SESSION["token"] . "  
         AND fecha='" . $_SESSION["fecha"] . "';";
+        */
+        $queryDisp = "SELECT * FROM set_dispositivos 
+        WHERE ip='" . $_SESSION["ip"] . "' 
+        AND so='" . $_SESSION["so"] . "' 
+        AND nav='" . $_SESSION["nav"] . "' 
+        AND user=" . $_SESSION["user"] . "
+        AND token=" . $_SESSION["token"] . ";";
         $resDisp = $conn->query($queryDisp);
         // Se revisa que exista un registro con ese dispositivo
         if ($resDisp->num_rows > 0){
