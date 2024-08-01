@@ -1,0 +1,31 @@
+.loginForm{
+    width: 40%;
+    margin-top: 10%;
+    padding: 12px 20px;
+    border: 2px solid gray;
+    border-color: rgb(238, 238, 238);
+    background-color:rgb(238, 238, 238);
+    border-radius: 10px;
+}
+
+.error-message {
+    color: red;
+    font-size: 14px;
+    margin-top: 5px;
+}
+
+.imagen {
+    width: 50px; /* Ancho del contenedor */
+    height: 80px; /* Alto del contenedor */
+    overflow: hidden; /* Oculta cualquier parte de la imagen que sobresalga del contenedor */
+    position: relative;
+}
+
+.imagen img {
+    width: 100%;
+    height: auto;
+    position: absolute; /* Permite el ajuste de la imagen dentro del contenedor */
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%); /* Centra la imagen */
+}
