@@ -10,12 +10,17 @@ $apm = $_POST["apm"];
 $tel = $_POST["tel"];
 $email = $_POST["email"];
 
-if (datosValidos()){
-    // Los datos ingresados son válidos
-    infoControl();
+// Verificación de dominio y petición
+if (domValid() || $_SERVER['REQUEST_METHOD'] !== 'POST') {
+    if (datosValidos()){
+        // Los datos ingresados son válidos
+        infoControl();
+    }else{
+        // Los datos no son válidos
+        header('Location: principal.php');
+    }
 }else{
-    // Los datos no son válidos
-    header('Location: principal.php');
+    header('Location: index.php');
 }
 
 // Funciones ------------------------------------------------------
@@ -181,6 +186,13 @@ function existeImagen(){
         // err
         return false;
     }
+}
+#endregion
+
+#region Validar dominio
+function domValid() {
+    $host = $_SERVER['HTTP_HOST'];
+    return $host === 'localhost' || $host === '127.0.0.1';
 }
 #endregion
 

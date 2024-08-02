@@ -10,11 +10,13 @@ function validarForm(){
 
     let valid = true;
 
+    // El Id solo debe ser numérico
     if (!/^[0-9]+$/.test(id)){
         idError.textContent = "El ID debe ser numérico";
         valid = false;
     }
 
+    // La contraseña debe tener mínimo 4 caracteres
     if (passw === "" || passw.length < 4){
         passwError.textContent = "La contaseña debe de tener mínimo 4 caracteres";
         valid = false;

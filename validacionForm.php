@@ -1,4 +1,4 @@
-stmt<?php
+<?php
 
 include 'mysqlConn.php';
 session_start();
@@ -9,78 +9,91 @@ $_SESSION['passwd'] = $_POST['passwd'];
 // Valores del usuario
 $id = $_POST['idUsr'];
 $passw = $_POST['passwd'];
-$valid = false;
 
-// Validar usuario y contraseña
-if (is_numeric($id)) {
-    if (strlen($passw) > 0 && strlen($passw) <= 4) {
-        // Ambos campos validados
-        // Se procede a validar en la bdd
+// Verificación de dominio y petición
+if (domValid() || $_SERVER['REQUEST_METHOD'] === 'POST') {
+    if(validDatos()){
         validControl();
-    } else {
-        // Passw incorrecta
+    }else{
         header('Location: index.php');
     }
-} else {
-    // id incorrecto
+}else{
     header('Location: index.php');
 }
 
 // Funciones ------------------------------------------------------
 
+#region Validar formulario
+function validDatos(){
+    global $id, $passw;
+    // Validar usuario y contraseña
+    if (is_numeric($id)) {
+        if (strlen($passw) >= 4) {
+            // Ambos campos validados
+            // Se procede a validar en la bdd
+            return true;
+        } else {
+            // Passw incorrecta
+            return false;
+        }
+    } else {
+        // id incorrecto
+        return false;
+    }
+}
+#endregion
+
 #region Control
 function validControl() {
     global $conn;
     if (logIn()) {
-        // Se pudo iniciar sesión
-        // Actualizar token en las existentes
-        actualizarToken();
-        // Se eliminan las sesiones no validadas de dias pasados
-        eliminarSesiones();
-        // Se valida el estado del dispositivo
-        switch (revisarDisp()){
-            case 1:
-                // El dispositivo existe y está validado 
-                // Se actualizan las sesiones
-                actualizarSesion();
-                // Se actualizan los campos para asginar las sesión activa
-                validarSesion();
-                // Se redirecciona a la página principal
-                $_SESSION["valid"] = "Si";
-                header('Location: principal.php');
-                break;
-            case 2:
-                // El dispositivo existe y no está validado
-                // Se revisa que no haya más de 4 intentos
-                if (revisarSesion()){
-                    // Puede seguir intentando
-                    // Se actualizan las sesiones
-                    actualizarSesion();
+        // Usuario y contraseña válidos
+        // Se verifica que no exceda las 4 sesiones
+        if (revisarSesion()){
+            // El usuario se encuentra libre de sesiones
+            // Se actualiza el token
+            actualizarToken();
+            // Se asignan las demás sesiones como no activas
+            desactivarDispositivos();
+            // Se revisa el estado del usuario y el dispositivo
+            switch (revisarDisp()){
+                case 1:
+                    // El dispositivo existe y está validado
+                    // Se inserta la sesión
+                    setSesion();
+                    // Se redirecciona a la página principal
+                    validarSesion();
+                    validarSesionDisp();
+                    header('Location: principal.php');
+                    break;
+                case 2:
+                    // El dispositivo existe y no está validado
                     // Se crea un nuevo pin
-                    $_SESSION["pin"] = obtenerPin();
+                    $_SESSION["pin"] = generarPin();
+                    // Se actualiza el token y la sesión del dispositivo
+                    actualizarDispositivo();
                     // Se agrega una sesión
-                    registrarSesion();
-                    // Se redirecciona al Pin form
+                    setSesion();
                     header('Location: pinForm.php');
-                }else{
-                    // Ya no puede seguir iniciando
+                    break;
+                case 3:
+                    // El dispositivo no existe
+                    // Se genera un PIN para el dispositivo
+                    $_SESSION["pin"] = generarPin();
+                    // Se agrega el dispositivo
+                    registrarDispositivo();
+                    // Se agrega una sesión
+                    setSesion();
+                    header('Location: pinForm.php');
+                    break;
+                default:
+                    // Error
                     header('Location: index.php');
-                }
-                break;
-            case 3:
-                // El dispositivo no existe
-                // Se genera un PIN para el dispositivo
-                $_SESSION["pin"] = generarPin();
-                // Se agrega una sesión
-                registrarSesion();
-                // Se registra la sesión con el PIN
-                // Se redirecciona al form de PIN
-                header('Location: pinForm.php');
-                break;
-            default:
-                // Error
-                header('Location: index.php');
-                break;
+                    break;
+            }
+        }else{
+            // Excedió los 4 intentos
+            header('Location: index.php');
         }
     } else {
         // Se agrega una sesión?
@@ -93,14 +106,15 @@ function validControl() {
 function logIn() {
     global $id, $passw, $conn;
     try {
-        $query = "SELECT pw FROM set_usuarios WHERE id=" . $id . ";";
-        $res = $conn->query($query);
-
+        $consult = $conn->prepare("SELECT pw FROM set_usuarios WHERE usuario=?");
+        $consult->bind_param("i", $id);
+        $consult->execute();
+        $res = $consult->get_result();
         if ($res->num_rows > 0) {
             // validar constraseña
             while ($row = $res->fetch_assoc()) {
                 $passwAux = $row["pw"];
-                if ($passw == $passwAux) {
+                if (password_verify($passw, $passwAux)) {
                     // Coinciden las contraseñas
                     return true;
                 } else {
@@ -117,26 +131,35 @@ function logIn() {
 }
 #endregion
 
+#region Revisar sesión
+function revisarSesion() {
+    global $conn;
+    $consult = $conn->prepare("SELECT * FROM set_sesiones WHERE usuario=? AND fecha=? AND sesion='No'");
+    $consult->bind_param("is", $_SESSION["user"], $_SESSION["fecha"]);
+    $consult->execute();
+    $resDisp = $consult->get_result();
+    // Se revisa si hay más de 4 sesiones
+    if ($resDisp->num_rows < 4) {
+        // Hay menos de 4, se registra
+        return true;
+    }else{
+        // Hay más de 4, no se registra
+        return false;
+    }
+}
+#endregion
+
 #region Revisar dispositivos
 function revisarDisp() {
     global $conn;
     try{
         $estado = 0;
         // Consulta del dispositivo
-        /*
-        $queryDisp = "SELECT * FROM set_dispositivos 
-        WHERE ip='" . $_SESSION["ip"] . "' 
-        AND so='" . $_SESSION["so"] . "' 
-        AND nav='" . $_SESSION["nav"] . "' 
-        AND user=" . $_SESSION["user"] . " 
-        AND fecha='" . $_SESSION["fecha"] . "';";
-        */
-        $queryDisp = "SELECT * FROM set_dispositivos 
-        WHERE ip='" . $_SESSION["ip"] . "' 
-        AND so='" . $_SESSION["so"] . "' 
-        AND nav='" . $_SESSION["nav"] . "' 
-        AND user=" . $_SESSION["user"] . ";";
-        $resDisp = $conn->query($queryDisp);
+        $consult = $conn->prepare("SELECT * FROM set_dispositivos 
+        WHERE ip=? AND so=? AND nav=? AND usuario=? AND token=?");
+        $consult->bind_param("sssis", $_SESSION["ip"], $_SESSION["so"], $_SESSION["nav"], $_SESSION["user"], $_SESSION["token"]);
+        $consult->execute();
+        $resDisp = $consult->get_result();
         // Se revisa que exista un registro con ese dispositivo
         if ($resDisp->num_rows > 0){
             // Existe
@@ -162,100 +185,108 @@ function revisarDisp() {
 }
 #endregion
 
-#region Actualizar token
-function actualizarToken(){
+#region Agregar sesión
+function setSesion(){
     global $conn;
     try{
-        $queryTokenDisp = "UPDATE set_dispositivos 
-        SET token='" . $_SESSION["token"] . "' 
-        WHERE user=" . $_SESSION["user"] . "
-        AND ip='" . $_SESSION["ip"] . "'
-        AND so='" . $_SESSION["so"] . "'
-        AND nav='" . $_SESSION["nav"] . "';";
-        $res = $conn->query($queryTokenDisp);
+        $consult = $conn->prepare("INSERT INTO set_sesiones(usuario, sesion, fecha, token) 
+        VALUES (?, 'No', ?, ?)");
+        $consult->bind_param("iss", $_SESSION["user"], $_SESSION["fecha"], $_SESSION["token"]);
+        $consult->execute();
     }catch(Exception $ex){
         // err
     }
 }
 #endregion
 
-#region Registrar sesión
-function registrarSesion() {
+#region Actualizar token
+function actualizarToken(){
+    global $conn;
+    try{
+        $consult = $conn->prepare("UPDATE set_dispositivos 
+        SET token=? 
+        WHERE usuario=?");
+        $consult->bind_param("si", $_SESSION["token"], $_SESSION["user"]);
+        $consult->execute();
+    }catch(Exception $ex){
+        // err
+    }
+}
+#endregion
+
+#region Registrar dispositivo
+function registrarDispositivo() {
     global $conn;
     try {
-        $queryRegistrarDisp = "INSERT INTO set_dispositivos (ip, so, nav, user, pin, valid, sesion, fecha, actual, token) VALUES (
-            '" . $_SESSION["ip"] . "',
-            '" . $_SESSION["so"] . "',
-            '" . $_SESSION["nav"] . "',
-            " . $_SESSION["user"] . ",
-            " . $_SESSION["pin"] . ",
-            'No',
-            'No',
-            '" . $_SESSION["fecha"] . "',
-            'No',
-            " . $_SESSION["token"] . "
-        );";
-        $resRegDisp = $conn->query($queryRegistrarDisp);
+        $consult = $conn->prepare("INSERT INTO set_dispositivos (ip, so, nav, usuario, pin, valid, sesion, fecha, actual, token) VALUES (?, ?, ?, ?, ?, 'No', 'No', ?, 'No', ?)");
+        $consult->bind_param("sssisss", $_SESSION["ip"], $_SESSION["so"], $_SESSION["nav"], $_SESSION["user"], $_SESSION["pin"], $_SESSION["fecha"], $_SESSION["token"]);
+        $consult->execute();
     } catch (Exception $ex) {
         // Manejar excepción
     }
 }
 #endregion
 
-#region Actualizar sesión 
-function actualizarSesion(){
-    global $conn;
-    $queryAct = "UPDATE set_dispositivos
-        SET sesion='No', actual='No'
-        WHERE user=" . $_SESSION["user"] . "
-        AND ip='" . $_SESSION["ip"] . "'
-        AND so='" . $_SESSION["so"] . "'
-        AND nav='" . $_SESSION["nav"] . "';";
-    $resp = $conn->query($queryAct);
-}
-#endregion
-
-#region Validar sesión
-function validarSesion() {
+#region Actualizar dispositivo 
+function actualizarDispositivo(){
     global $conn;
     try{
-        // Se actualiza el campo sesion
-        $queryValid = "UPDATE set_dispositivos
-        SET sesion='Si'
-        WHERE user=" . $_SESSION["user"] . "
-        AND ip='" . $_SESSION["ip"] . "'
-        AND so='" . $_SESSION["so"] . "'
-        AND token='" . $_SESSION["token"] . "'
-        AND nav='" . $_SESSION["nav"] . "';";
-        $resp = $conn->query($queryValid);
-        // Se actualiza el campo de actual
-        $queryAct = "UPDATE set_dispositivos
-        SET actual='Si'
-        WHERE user=" . $_SESSION["user"] . "
-        AND ip='" . $_SESSION["ip"] . "'
-        AND so='" . $_SESSION["so"] . "'
-        AND token='" . $_SESSION["token"] . "'
-        AND nav='" . $_SESSION["nav"] . "';";
-        $resp2 = $conn->query($queryAct);
+        $consult = $conn->prepare("UPDATE set_dispositivos
+        SET sesion='No', actual='No', pin=?
+        WHERE usuario=? AND ip=? AND so=? AND nav=?");
+        $consult->bind_param("sisss", $_SESSION["pin"] , $_SESSION["user"], $_SESSION["ip"], $_SESSION["so"], $_SESSION["nav"]);
+        $consult->execute();
     }catch(Exception $ex){
         // err
     }
 }
 #endregion
 
-#region Revisar sesión
-function revisarSesion() {
+#region Desactivar dispositivos
+function desactivarDispositivos(){
     global $conn;
-    $queryDisp = "SELECT * FROM set_dispositivos WHERE pin=" . $_SESSION["pin"] . " AND token=" . $_SESSION["token"] . ";";
-    $resDisp = $conn->query($queryDisp);
+    try{
+        $consult = $conn->prepare("UPDATE set_dispositivos
+        SET sesion='No', actual='No'
+        WHERE usuario=? OR ip!=? OR so!=? OR nav!=? OR token!=?");
+        $consult->bind_param("issss", $_SESSION["user"], $_SESSION["ip"], $_SESSION["so"], $_SESSION["nav"], $_SESSION["token"]);
+        $consult->execute();
+    }catch(Exception $ex){
+        // err
+    }
+}
+#endregion
 
-    // Se revisa si hay más de 4 sesiones
-    if ($resDisp->num_rows < 4) {
-        // Hay menos de 4, se registra
-        return true;
-    }else{
-        // Hay menos de 4, se registra
-        return false;
+#region Validar sesion
+function validarSesion(){
+    global $conn;
+    try{
+        $queryValDisp = "UPDATE set_sesiones 
+        SET sesion='Si'
+        WHERE usuario=? 
+        AND fecha=? 
+        AND token=?";
+        $consult = $conn->prepare($queryValDisp);
+        $consult->bind_param("iss", $_SESSION["user"], $_SESSION["fecha"], $_SESSION["token"]);
+        $consult->execute();
+    }catch(Exception $ex){
+        // err
+    }
+}
+#endregion
+
+#region Validar sesión dispositivo
+function validarSesionDisp() {
+    global $conn;
+    try{
+        // Se actualiza el campo sesion
+        $consult = $conn->prepare("UPDATE set_dispositivos
+        SET sesion='Si', actual='Si'
+        WHERE usuario=? AND ip=? AND so=? AND token=? AND nav=?");
+        $consult->bind_param("issss", $_SESSION["user"], $_SESSION["ip"], $_SESSION["so"], $_SESSION["token"], $_SESSION["nav"]);
+        $consult->execute();
+    }catch(Exception $ex){
+        // err
     }
 }
 #endregion
@@ -267,47 +298,10 @@ function generarPin() {
 }
 #endregion
 
-#region Obtener Pin
-function obtenerPin() {
-    global $conn;
-    try{
-        $queryPin = "SELECT pin 
-        FROM set_dispositivos 
-        WHERE user=" . $_SESSION["user"] . "
-        AND ip='" . $_SESSION["ip"] . "'
-        AND so='" . $_SESSION["so"] . "'
-        AND nav='" . $_SESSION["nav"] . "'
-        AND fecha='" . $_SESSION["fecha"] . "';";
-        $res = $conn->query($queryPin);
-        if ($res->num_rows > 0){
-            while($row = $res->fetch_assoc()){
-                $pin = $row["pin"];
-            }
-        }
-        return $pin;
-    }catch(Exception $ex){
-        // err
-        return "0";
-    }
-}
-#endregion
-
-#region Eliminar sesiones
-function eliminarSesiones() {
-    global $conn;
-    try {
-        $queryElim = "DELETE set_dispositivos 
-        WHERE user='" . $_SESSION["user"] . "' 
-        AND so='" . $_SESSION["so"] . "' 
-        AND nav='" . $_SESSION["nav"] . "' 
-        AND ip='" . $_SESSION["ip"] . "' 
-        AND token=" . $_SESSION["token"] . "
-        AND fecha!=" . $_SESSION["fecha"] . "'
-        AND valid='No';";
-        $elim = $conn->query($queryElim);
-    } catch (Exception $ex) {
-        // Manejar excepción
-    }
+#region Validar dominio
+function domValid() {
+    $host = $_SERVER['HTTP_HOST'];
+    return $host === 'localhost' || $host === '127.0.0.1';
 }
 #endregion
 

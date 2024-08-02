@@ -1,15 +1,8 @@
 <?php
     include 'mysqlConn.php';
     session_start();
-    #region Validación de sesión
-    sesionUsuario();
-    restricSesionUsuario();
-    // Revisando si el usuario es válido
-    if (isset($_SESSION['valid'])){
-        if ($_SESSION['valid'] == "No"){
-            header ('Location: index.php');
-        }
-    }else{
+    #region Revisar sesión válida
+    if(!sesionUsuario() || !domValid()){
         header ('Location: index.php');
     }
     #endregion
@@ -120,73 +113,18 @@ function sesionUsuario(){
                 $token = $row["token"];
                 if ($token != $_SESSION["token"]){
                     // El token no coincide
-                    // Se cierra la otra sesión
-                    cerrarSesion($token);
-                    // Se valida la sesión
-                    $_SESSION["valid"] = "Si";
+                    return false;
+                }else{
+                    return true;
                 }
             }
         }else{
             // El usuario está libre de sesiones
         }
-        $_SESSION["valid"] = "Si";
     }catch(Exception $ex){
         header('Location: index.php');
         //error
     }
-}
-#endregion
-
-#region Restricción de sesion usuario
-function restricSesionUsuario(){
-    global $conn;
-    try{
-        /*
-        $queryDisp = "SELECT * FROM set_dispositivos 
-        WHERE ip='" . $_SESSION["ip"] . "' 
-        AND so='" . $_SESSION["so"] . "' 
-        AND nav='" . $_SESSION["nav"] . "' 
-        AND user=" . $_SESSION["user"] . "
-        AND token=" . $_SESSION["token"] . "  
-        AND fecha='" . $_SESSION["fecha"] . "';";
-        */
-        $queryDisp = "SELECT * FROM set_dispositivos 
-        WHERE ip='" . $_SESSION["ip"] . "' 
-        AND so='" . $_SESSION["so"] . "' 
-        AND nav='" . $_SESSION["nav"] . "' 
-        AND user=" . $_SESSION["user"] . "
-        AND token=" . $_SESSION["token"] . ";";
-        $resDisp = $conn->query($queryDisp);
-        // Se revisa que exista un registro con ese dispositivo
-        if ($resDisp->num_rows > 0){
-            // Existe
-            // Revisar si se encuentra validado
-            while ($row = $resDisp->fetch_assoc()){
-                $validAux = $row["actual"];
-                if ($validAux == "Si"){
-                    // Es la sesión actual
-                    $_SESSION["valid"] = "Si";
-                }else if($validAux == "No"){
-                    // No es la sesión actual
-                    $_SESSION["valid"] = "No";
-                }
-            }
-        }else{
-            // No Existe
-            $_SESSION["valid"] = "No";
-        }
-    }catch(Exception $ex){
-        header('Location: index.php');
-        //error
-    }
-}
-#endregion
-
-#region Cerrar sesión
-function cerrarSesion($token){
-    global $conn;
-    $queryValSes = "UPDATE set_dispositivos SET sesion='No', actual='No' WHERE token=" . $_SESSION["token"] . ";";
-    $resValSes = $conn->query($queryValSes);
 }
 #endregion
 
@@ -232,4 +170,10 @@ function obtenerInfo(){
 }
 #endregion
 
+#region Validar dominio
+function domValid() {
+    $host = $_SERVER['HTTP_HOST'];
+    return $host === 'localhost' || $host === '127.0.0.1';
+}
+#endregion
 ?>
