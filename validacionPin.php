@@ -3,7 +3,7 @@
 include 'mysqlConn.php';
 session_start();
 
-$pin = $_POST["pin"];
+$pin = filter_input(INPUT_POST,'pin', FILTER_SANITIZE_NUMBER_INT);
 
 // Verificación de dominio y petición
 if (domValid() || $_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -21,6 +21,7 @@ if (domValid() || $_SERVER['REQUEST_METHOD'] !== 'POST') {
             // Pin no válido
             header ('Location: index.php');
         }
+    }else{
     }
 }else{
     header('Location: index.php');
@@ -32,7 +33,7 @@ if (domValid() || $_SERVER['REQUEST_METHOD'] !== 'POST') {
 function validarPin(){
     global $pin;
     if (is_numeric($pin)){
-        if (strlen($pin) > 0 && strlen($pin) == 4){
+        if (strlen($pin) == 4){
             return true;
         }else{
             return false;
@@ -46,12 +47,11 @@ function validarPin(){
 #region Confirmar pin
 function confirmarPin(){
     global $pin, $conn;
-    $queryPin = "SELECT pin FROM set_dispositivos 
-    WHERE usuario=? 
-    AND fecha=? 
+    $queryPin = "SELECT * FROM set_dispositivos 
+    WHERE usuario=?
     AND token=?";
     $consult = $conn->prepare($queryPin);
-    $consult->bind_param("iss", $_SESSION["usuario"], $_SESSION["fecha"], $_SESSION["token"]);
+    $consult->bind_param("is", $_SESSION["user"], $_SESSION["token"]);
     $consult->execute();
     $result = $consult->get_result();
     if ($result->num_rows > 0){
@@ -81,7 +81,7 @@ function validarPinValBdd(){
         AND ip=? 
         AND so=? 
         AND nav=? 
-        AND user=?
+        AND usuario=?
         AND token=?";
         $consult = $conn->prepare($queryValDisp);
         $consult->bind_param("isssis", $pin, $_SESSION["ip"], $_SESSION["so"], $_SESSION["nav"], $_SESSION["user"], $_SESSION["token"]);
@@ -101,7 +101,7 @@ function setActual(){
         WHERE ip=? 
         AND so=? 
         AND nav=? 
-        AND user=?
+        AND usuario=?
         AND token=?";
         $consult = $conn->prepare($queryValDisp);
         $consult->bind_param("sssis", $_SESSION["ip"], $_SESSION["so"], $_SESSION["nav"], $_SESSION["user"], $_SESSION["token"]);

@@ -7,11 +7,11 @@ function validarPin(){
     let valid = true;
 
     if (!/^[0-9]+$/.test(pin)){
-        pinError.textContent = "El ID debe ser numérico";
+        pinError.textContent = "El PIN debe ser numérico";
         valid = false;
     }
 
-    if (pin.length <= 0 && pin.length > 4){
+    if (pin.length !== 4){
         pinError.textContent = "El PIN debe ser de 4 dígitos";
         valid = false;
     }

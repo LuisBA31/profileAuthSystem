@@ -101,27 +101,29 @@ function sesionUsuario(){
     global $conn;
     try{
         $queryTok = "SELECT * FROM set_dispositivos 
-        WHERE (ip != '" . $_SESSION["ip"] . "' 
-        OR so != '" . $_SESSION["so"] . "' 
-        OR nav != '" . $_SESSION["nav"] . "') 
-        AND user = " . $_SESSION["user"] . " 
+        WHERE (ip != ? OR so != ? OR nav != ?) 
+        AND usuario = ? 
         AND actual = 'Si';";
-        $res= $conn->query($queryTok);
-        if ($res->num_rows > 0){
+        $consult = $conn->prepare($queryTok);
+        $consult->bind_param("sssi", $_SESSION["ip"], $_SESSION["so"], $_SESSION["nav"], $_SESSION["user"]);
+        $consult->execute();
+        $result = $consult->get_result();
+        if ($result->num_rows > 0){
             // El usuario se encuentra en sesión en otro dispositivo
-            while ($row = $res->fetch_assoc()){
+            while ($row = $result->fetch_assoc()){
                 $token = $row["token"];
                 if ($token != $_SESSION["token"]){
                     // El token no coincide
                     return false;
-                }else{
+                } else {
                     return true;
                 }
             }
-        }else{
+        } else {
             // El usuario está libre de sesiones
+            return true;
         }
-    }catch(Exception $ex){
+    } catch(Exception $ex){
         header('Location: index.php');
         //error
     }
@@ -132,38 +134,23 @@ function sesionUsuario(){
 function obtenerInfo(){
     global $conn;
     $infoUsuario = array();
-    $queryinfo = "SELECT * FROM set_usuarios WHERE id=" . $_SESSION["user"] . ";";
-    $resinfo = $conn->query($queryinfo);
-    if ($resinfo->num_rows > 0){
+
+    $queryinfo = "SELECT nombre, apPaterno, apMaterno, telefono, email FROM set_usuarios WHERE usuario = ?";
+    $consult = $conn->prepare($queryinfo);
+    $consult->bind_param("i", $_SESSION["user"]);
+    $consult->execute();
+    $result = $consult->get_result();
+
+    if ($result->num_rows > 0){
         // Se encontró el usuario
-        while ($row = $resinfo->fetch_assoc()){
-            if (is_null($row["nombre"]) || $row["nombre"] == ""){
-                array_push($infoUsuario,"Nombre");
-            }else{
-                array_push($infoUsuario,$row["nombre"]);
-            }
-            if (is_null($row["apPaterno"]) || $row["apPaterno"] == ""){
-                array_push($infoUsuario,"Apellido paterno");
-            }else{
-                array_push($infoUsuario,$row["apPaterno"]);
-            }
-            if (is_null($row["apMaterno"]) || $row["apMaterno"] == ""){
-                array_push($infoUsuario,"Apellido materno");
-            }else{
-                array_push($infoUsuario,$row["apMaterno"]);
-            }
-            if (is_null($row["telefono"]) || $row["telefono"] == "" || $row["telefono"] == "0"){
-                array_push($infoUsuario,"Teléfono");
-            }else{
-                array_push($infoUsuario,$row["telefono"]);
-            }
-            if (is_null($row["email"]) || $row["email"] == ""){
-                array_push($infoUsuario,"Email");
-            }else{
-                array_push($infoUsuario,$row["email"]);
-            }
+        while ($row = $result->fetch_assoc()){
+            $infoUsuario[] = is_null($row["nombre"]) || $row["nombre"] == "" ? "Nombre" : $row["nombre"];
+            $infoUsuario[] = is_null($row["apPaterno"]) || $row["apPaterno"] == "" ? "Apellido paterno" : $row["apPaterno"];
+            $infoUsuario[] = is_null($row["apMaterno"]) || $row["apMaterno"] == "" ? "Apellido materno" : $row["apMaterno"];
+            $infoUsuario[] = is_null($row["telefono"]) || $row["telefono"] == "" || $row["telefono"] == "0" ? "Teléfono" : $row["telefono"];
+            $infoUsuario[] = is_null($row["email"]) || $row["email"] == "" ? "Email" : $row["email"];
         }
-    }else{
+    } else {
         // No hay registros
     }
     return $infoUsuario;

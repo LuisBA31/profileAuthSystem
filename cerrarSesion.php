@@ -14,9 +14,16 @@ header('Location: index.php');
 #region Cerrar sesión
 function cerrarSesion(){
     global $conn;
-    $queryValSes = "UPDATE set_dispositivos SET sesion='No', actual='No' WHERE token=" . $_SESSION["token"] . ";";
-    $resValSes = $conn->query($queryValSes);
+    try{
+        $queryValSes = "UPDATE set_dispositivos SET sesion='No', actual='No' WHERE token = ?";
+        $consult = $conn->prepare($queryValSes);
+        $consult->bind_param("s", $_SESSION["token"]);
+        $consult->execute();
+    } catch(Exception $ex){
+        // Err
+    }
 }
+
 #endregion
 
 ?>

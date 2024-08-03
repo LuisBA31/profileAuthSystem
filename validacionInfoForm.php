@@ -4,11 +4,11 @@ include 'mysqlConn.php';
 session_start();
 
 // Información del usuario
-$nom = $_POST["nombre"];
-$app = $_POST["app"];
-$apm = $_POST["apm"];
-$tel = $_POST["tel"];
-$email = $_POST["email"];
+$nom = filter_input(INPUT_POST,'nombre', FILTER_SANITIZE_STRING);
+$app = filter_input(INPUT_POST,'app', FILTER_SANITIZE_STRING);
+$apm = filter_input(INPUT_POST,'apm', FILTER_SANITIZE_STRING);
+$tel = filter_input(INPUT_POST,'tel', FILTER_SANITIZE_NUMBER_INT);
+$email = filter_input(INPUT_POST,'email', FILTER_SANITIZE_EMAIL);
 
 // Verificación de dominio y petición
 if (domValid() || $_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -50,7 +50,7 @@ function datosValidos(){
 #region Validar numero
 function validNum($num){
     $n = strlen((string)$num);
-    if ($n < 10 || $n > 10){
+    if ($n < 8 || $n > 15){
         return false;
     }else{
         return true;
@@ -78,7 +78,7 @@ function tokenValido(){
     global $conn;
     try{
         // Se obtiene el token de la sesión actual del usuario
-        $queryToken = "SELECT * FROM set_dispositivos WHERE user=" . $_SESSION["user"] ." AND actual='Si';";
+        $queryToken = "SELECT * FROM set_dispositivos WHERE usuario=" . $_SESSION["user"] ." AND actual='Si';";
         $res = $conn->query($queryToken);
         if ($res->num_rows > 0){
             // Hay usuario activo
@@ -107,7 +107,7 @@ function tokenValido(){
 function actualizarDatos(){
     global $conn,$nom, $app, $apm, $tel, $email;
     $queryActualizar = "UPDATE set_usuarios 
-    SET nombre='$nom', apPaterno='$app', apMaterno='$apm', telefono=$tel, email='$email' WHERE id=" . $_SESSION["user"] .";";
+    SET nombre='$nom', apPaterno='$app', apMaterno='$apm', telefono=$tel, email='$email' WHERE usuario=" . $_SESSION["user"] .";";
     $resAct = $conn->query($queryActualizar);
 }
 #endregion

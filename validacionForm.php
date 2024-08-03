@@ -3,11 +3,12 @@
 include 'mysqlConn.php';
 session_start();
 
-$_SESSION['user'] = $_POST['idUsr'];
-$_SESSION['passwd'] = $_POST['passwd'];
+$_SESSION['user'] = filter_input(INPUT_POST,'idUsr', FILTER_SANITIZE_STRING);
+$_SESSION['passwd'] = filter_input(INPUT_POST,'passwd', FILTER_SANITIZE_STRING);
 
 // Valores del usuario
 $id = $_POST['idUsr'];
+// La contraseña está encriptada por Hash
 $passw = $_POST['passwd'];
 
 // Verificación de dominio y petición
@@ -74,6 +75,7 @@ function validControl() {
                     actualizarDispositivo();
                     // Se agrega una sesión
                     setSesion();
+                    $_SESSION["err"] = $_SESSION["err"] . " / Pasó la validación del formulario";
                     header('Location: pinForm.php');
                     break;
                 case 3:
@@ -156,8 +158,8 @@ function revisarDisp() {
         $estado = 0;
         // Consulta del dispositivo
         $consult = $conn->prepare("SELECT * FROM set_dispositivos 
-        WHERE ip=? AND so=? AND nav=? AND usuario=? AND token=?");
-        $consult->bind_param("sssis", $_SESSION["ip"], $_SESSION["so"], $_SESSION["nav"], $_SESSION["user"], $_SESSION["token"]);
+        WHERE ip=? AND so=? AND nav=? AND usuario=?");
+        $consult->bind_param("sssi", $_SESSION["ip"], $_SESSION["so"], $_SESSION["nav"], $_SESSION["user"]);
         $consult->execute();
         $resDisp = $consult->get_result();
         // Se revisa que exista un registro con ese dispositivo
@@ -205,8 +207,8 @@ function actualizarToken(){
     try{
         $consult = $conn->prepare("UPDATE set_dispositivos 
         SET token=? 
-        WHERE usuario=?");
-        $consult->bind_param("si", $_SESSION["token"], $_SESSION["user"]);
+        WHERE usuario=? AND ip=? AND so=? AND nav=?");
+        $consult->bind_param("sisss", $_SESSION["token"], $_SESSION["user"], $_SESSION["ip"], $_SESSION["so"], $_SESSION["nav"]);
         $consult->execute();
     }catch(Exception $ex){
         // err
@@ -232,9 +234,9 @@ function actualizarDispositivo(){
     global $conn;
     try{
         $consult = $conn->prepare("UPDATE set_dispositivos
-        SET sesion='No', actual='No', pin=?
+        SET sesion='No', actual='No', pin=?, token=?
         WHERE usuario=? AND ip=? AND so=? AND nav=?");
-        $consult->bind_param("sisss", $_SESSION["pin"] , $_SESSION["user"], $_SESSION["ip"], $_SESSION["so"], $_SESSION["nav"]);
+        $consult->bind_param("isisss", $_SESSION["pin"] , $_SESSION["token"] , $_SESSION["user"], $_SESSION["ip"], $_SESSION["so"], $_SESSION["nav"]);
         $consult->execute();
     }catch(Exception $ex){
         // err

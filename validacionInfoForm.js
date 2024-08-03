@@ -13,7 +13,7 @@ function validarInfoForm() {
     const imgError = document.getElementById("imgError");
 
     const mailEx = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    const telEx = /^\d{10}$/;
+    const telEx = /^\d{8,15}$/;
     const numEx = /^[0-9]+$/;
     const contNum = /\d/
 

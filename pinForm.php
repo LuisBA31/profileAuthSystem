@@ -12,7 +12,7 @@
     <title>Document</title>
 </head>
 <body style="display: flex; justify-content: center; margin-top: 5%; align-items: center;">
-    <form id="loginForm" action="validacionPin.php" onSubmit="return validarPin()" class="loginForm" method="post">
+    <form id="pinForm" action="validacionPin.php" onSubmit="return validarPin()" class="loginForm" method="post">
         <h2 style="text-align: center">VALIDAR PIN</h2>
         <div class="col-12">
             <label for="pin" class="form-label">PIN</label>
