@@ -98,7 +98,10 @@ function validControl() {
             header('Location: index.php');
         }
     } else {
-        // Se agrega una sesión?
+        // Si el usuario existe se le agrega una sesión
+        if (usuarioExiste()){
+            setSesion();
+        }
         header('Location: index.php');
     }
 }
@@ -304,6 +307,30 @@ function generarPin() {
 function domValid() {
     $host = $_SERVER['HTTP_HOST'];
     return $host === 'localhost' || $host === '127.0.0.1';
+}
+#endregion
+
+#region Revisar si existe un usuario
+function usuarioExiste(){
+    global $conn;
+    try{
+        $query = "SELECT * FROM set_dispositivos
+        WHERE usuario = ?";
+        $consult = $conn->prepare($query);
+        $consult->bind_param("i", $_SESSION["user"]);
+        $consult->execute();
+        $result = $consult->get_result();
+        if ($result->num_rows > 0){
+            // Existe el usuario
+            return true;
+        }else{
+            // No existe el usuario
+            return false;
+        }
+    }catch(Exception $ex){
+        // Err
+        header('Location: index.php');
+    }
 }
 #endregion
 

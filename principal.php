@@ -125,9 +125,10 @@ function sesionUsuario(){
     global $conn;
     try{
         $queryTok = "SELECT * FROM set_dispositivos 
-        WHERE (ip != ? OR so != ? OR nav != ?) 
-        AND usuario = ? 
-        AND actual = 'Si';";
+        WHERE ip = ? 
+        AND so = ? 
+        AND nav = ? 
+        AND usuario = ? ";
         $consult = $conn->prepare($queryTok);
         $consult->bind_param("sssi", $_SESSION["ip"], $_SESSION["so"], $_SESSION["nav"], $_SESSION["user"]);
         $consult->execute();
@@ -136,8 +137,9 @@ function sesionUsuario(){
             // El usuario se encuentra en sesión en otro dispositivo
             while ($row = $result->fetch_assoc()){
                 $token = $row["token"];
-                if ($token != $_SESSION["token"]){
-                    // El token no coincide
+                $actual = $row["actual"];
+                if ($token != $_SESSION["token"] || $actual != "Si"){
+                    // El token no coincide o no es la sesión actual
                     return false;
                 } else {
                     return true;
