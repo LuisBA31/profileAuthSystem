@@ -7,7 +7,6 @@
     git clone https://github.com/LuisBA31/profileAuthSystem.git
 
 2. Importa la base de datos:
-    ```bash
     - El archivo de base de datos se encuentra como: login.sql
     - Conéctate a tu servidor de base de datos.
     - Crea una base de datos con el mismo nombre que la base de datos a importar.
