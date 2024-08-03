@@ -2,7 +2,7 @@
     include 'mysqlConn.php';
     session_start();
     #region Revisar sesión válida
-    if(!sesionUsuario() || !domValid()){
+    if(!usuarioExiste() || !sesionUsuario() || !domValid()){
         header ('Location: index.php');
     }
     #endregion
@@ -95,6 +95,30 @@
 </html>
 <?php 
 // Funciones ------------------------------------------------------------------
+
+#region Revisar si existe un usuario
+function usuarioExiste(){
+    global $conn;
+    try{
+        $query = "SELECT * FROM set_dispositivos
+        WHERE usuario = ?";
+        $consult = $conn->prepare($query);
+        $consult->bind_param("i", $_SESSION["user"]);
+        $consult->execute();
+        $result = $consult->get_result();
+        if ($result->num_rows > 0){
+            // Existe el usuario
+            return true;
+        }else{
+            // No existe el usuario
+            return false;
+        }
+    }catch(Exception $ex){
+        // Err
+        header('Location: index.php');
+    }
+}
+#endregion
 
 #region Revisar sesion usuario
 function sesionUsuario(){

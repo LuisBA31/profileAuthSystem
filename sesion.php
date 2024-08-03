@@ -12,8 +12,8 @@ $_SESSION["nav"] = obtenerNavegador($user_agent);
 $_SESSION["so"] = obtenerSO($user_agent);
 // Fecha
 $_SESSION["fecha"] = obtenerFecha();
-// Variable para control de errores
-$_SESSION["control"] = "No";
+// Variables para control de errores
+// $_SESSION["control"] = "No";
 // $_SESSION["err"] = $_SESSION["err"];
 
 // Funciones --------------------------------------------------
