@@ -10,27 +10,18 @@ $passw = filter_input(INPUT_POST,'passwd', FILTER_SANITIZE_STRING);
 // Token enlazado al formulario
 $tok = filter_input(INPUT_POST,'token', FILTER_SANITIZE_STRING);
 
-$alerta = "Error";
-
-echo "<script>alert('You are logged out'); window.location.href='index.php';</script>";
-echo '<script>alert("Welcome to Geeks for Geeks")</script>';
+$_SESSION["err"] = "";
 
 // Verificación de dominio y petición
 if (domValid() && $_SERVER['REQUEST_METHOD'] === 'POST' && $tok === $_SESSION["token"]) {
     if(validDatos()){
         validControl();
     }else{
-        $alerta = "Los datos ingresados no son válidos";
-        echo "<script type='text/javascript'>
-            alert('$alerta');
-            </script>";
+        $_SESSION["err"] = "Los datos ingresados no son válidos";
         header('Location: index.php');
     }
 }else{
-    $alerta = "El dominio, token o método no son válidos";
-    echo "<script type='text/javascript'>
-        alert('$alerta');
-        </script>";
+    $_SESSION["err"] = "El dominio, método o token no son válidos";
     header('Location: index.php');
 }
 
@@ -86,7 +77,6 @@ function validControl() {
                     actualizarDispositivo();
                     // Se agrega una sesión
                     setSesion();
-                    $_SESSION["err"] = $_SESSION["err"] . " / Pasó la validación del formulario";
                     header('Location: pinForm.php');
                     break;
                 case 3:
@@ -106,20 +96,14 @@ function validControl() {
             }
         }else{
             // Excedió los 4 intentos
-            $alerta = "Excediste los 4 intentos de sesión, se ha bloqueado el usuario";
-            echo "<script type='text/javascript'>
-                alert('$alerta');
-                </script>";
+            $_SESSION["err"] = "Se han excedido los 4 intentos de sesión";
             // Se registra la sesión
             setSesion();
             header('Location: index.php');
         }
     } else {
         // Se agrega la sesión y regrsa al Login
-        $alerta = "El usuario o contraseña no son válidos";
-        echo "<script type='text/javascript'>
-            alert('$alerta');
-            </script>";
+        $_SESSION["err"] = "Usuario o contraseña incorrectos";
         setSesion();
         header('Location: index.php');
     }

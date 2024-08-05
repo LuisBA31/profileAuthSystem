@@ -16,7 +16,9 @@ $_SESSION["so"] = obtenerSO($user_agent);
 $_SESSION["fecha"] = obtenerFecha();
 // Variables para control de errores
 // $_SESSION["control"] = "No";
-// $_SESSION["err"] = $_SESSION["err"];
+if (!isset($_SESSION["err"])){
+    $_SESSION["err"]="";
+}
 
 // Funciones --------------------------------------------------
 

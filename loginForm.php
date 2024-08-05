@@ -9,6 +9,24 @@
     <title>Document</title>
 </head>
 <body style="display: flex; justify-content: center; margin-top: 5%; align-items: center;">
+    <!-- Error Modal -->
+    <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+        <div class="modal-header">
+            <h5 class="modal-title" id="exampleModalLabel">AVISO</h5>
+            <button type="button" class="btn btn-danger" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+            <?php echo $_SESSION["err"]; ?>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-dark" data-bs-dismiss="modal">Continuar</button>
+        </div>
+        </div>
+    </div>
+    </div>
+    <!-- Login Form -->
     <form id="loginForm" action="validacionForm.php" onSubmit="return validarForm()" class="loginForm" method="post">
         <h2 style="text-align: center">Iniciar Sesión</h2>
         <input type="text" id="token" name="token" value=<?php echo $_SESSION["token"] ?> required hidden>
@@ -29,9 +47,24 @@
         </div>
         <br>
     </form>
-    <?php // echo "Error: " . $_SESSION["err"]; ?>
     <script src="validacionForm.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js" integrity="sha384-IQsoLXl5PILFhosVNubq5LC7Qb9DXgDA9i+tQ8Zj3iwWAwPtgFTxbJ8NT4GN1R8p" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.min.js" integrity="sha384-cVKIPhGWiC2Al4u+LWgxfKTRIcfu0JTxR+EQDz/bgldoEyl4H0zUF0QKbrJ0EcQF" crossorigin="anonymous"></script>
+    <!-- Mostrar el error modal -->
+    <?php
+        if ($_SESSION["err"] != ""){
+            echo "
+            <script>
+                document.addEventListener('DOMContentLoaded', function() {
+                    var myModal = new bootstrap.Modal(document.getElementById('exampleModal'), {
+                        backdrop: 'static',
+                        keyboard: false
+                    });
+                    myModal.show();
+                });
+            </script>
+            ";
+        }
+    ?>
 </body>
 </html>

@@ -19,17 +19,7 @@ try{
             if ($row["token"] != $_SESSION["token"]){
                 if ($row["actual"] == "No"){
                     eliminar($idDisp);
-                }else{
-                    $alerta = "No puedes eliminar este dispositivo" ;
-                    echo "<script type='text/javascript'>
-                        alert('$alerta');
-                        </script>";
                 }
-            }else{
-                $alerta = "Acción restringida";
-                echo "<script type='text/javascript'>
-                    alert('$alerta');
-                    </script>";
             }
         }
     }

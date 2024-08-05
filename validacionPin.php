@@ -19,11 +19,14 @@ if (domValid() || $_SERVER['REQUEST_METHOD'] !== 'POST') {
             header ('Location: principal.php');
         }else{
             // Pin no válido
+            $_SESSION["err"] = "El PIN ingresado no es válido";
             header ('Location: index.php');
         }
     }else{
+        $_SESSION["err"] = "El PIN ingresado no es válido";
     }
 }else{
+    $_SESSION["err"] = "El dominio, método o token no son válidos";
     header('Location: index.php');
 }
 
