@@ -11,6 +11,7 @@
 <body style="display: flex; justify-content: center; margin-top: 5%; align-items: center;">
     <form id="loginForm" action="validacionForm.php" onSubmit="return validarForm()" class="loginForm" method="post">
         <h2 style="text-align: center">Iniciar Sesión</h2>
+        <input type="text" id="token" name="token" value=<?php echo $_SESSION["token"] ?> required hidden>
         <div class="col-12">
             <label for="idUsr" class="form-label">Id Usuario</label>
             <input type="text" class="form-control" id="idUsr" name="idUsr" placeholder="ID" required>

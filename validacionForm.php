@@ -3,22 +3,34 @@
 include 'mysqlConn.php';
 session_start();
 
-$_SESSION['user'] = filter_input(INPUT_POST,'idUsr', FILTER_SANITIZE_STRING);
-$_SESSION['passwd'] = filter_input(INPUT_POST,'passwd', FILTER_SANITIZE_STRING);
-
 // Valores del usuario
-$id = $_POST['idUsr'];
+$_SESSION['user'] = filter_input(INPUT_POST,'idUsr', FILTER_SANITIZE_STRING);
 // La contraseña está encriptada por Hash
-$passw = $_POST['passwd'];
+$passw = filter_input(INPUT_POST,'passwd', FILTER_SANITIZE_STRING);
+// Token enlazado al formulario
+$tok = filter_input(INPUT_POST,'token', FILTER_SANITIZE_STRING);
+
+$alerta = "Error";
+
+echo "<script>alert('You are logged out'); window.location.href='index.php';</script>";
+echo '<script>alert("Welcome to Geeks for Geeks")</script>';
 
 // Verificación de dominio y petición
-if (domValid() || $_SERVER['REQUEST_METHOD'] === 'POST') {
+if (domValid() && $_SERVER['REQUEST_METHOD'] === 'POST' && $tok === $_SESSION["token"]) {
     if(validDatos()){
         validControl();
     }else{
+        $alerta = "Los datos ingresados no son válidos";
+        echo "<script type='text/javascript'>
+            alert('$alerta');
+            </script>";
         header('Location: index.php');
     }
 }else{
+    $alerta = "El dominio, token o método no son válidos";
+    echo "<script type='text/javascript'>
+        alert('$alerta');
+        </script>";
     header('Location: index.php');
 }
 
@@ -26,9 +38,9 @@ if (domValid() || $_SERVER['REQUEST_METHOD'] === 'POST') {
 
 #region Validar formulario
 function validDatos(){
-    global $id, $passw;
+    global $passw;
     // Validar usuario y contraseña
-    if (is_numeric($id)) {
+    if (is_numeric($_SESSION["user"])) {
         if (strlen($passw) >= 4) {
             // Ambos campos validados
             // Se procede a validar en la bdd
@@ -46,7 +58,6 @@ function validDatos(){
 
 #region Control
 function validControl() {
-    global $conn;
     if (logIn()) {
         // Usuario y contraseña válidos
         // Se verifica que no exceda las 4 sesiones
@@ -95,13 +106,21 @@ function validControl() {
             }
         }else{
             // Excedió los 4 intentos
+            $alerta = "Excediste los 4 intentos de sesión, se ha bloqueado el usuario";
+            echo "<script type='text/javascript'>
+                alert('$alerta');
+                </script>";
+            // Se registra la sesión
+            setSesion();
             header('Location: index.php');
         }
     } else {
-        // Si el usuario existe se le agrega una sesión
-        if (usuarioExiste()){
-            setSesion();
-        }
+        // Se agrega la sesión y regrsa al Login
+        $alerta = "El usuario o contraseña no son válidos";
+        echo "<script type='text/javascript'>
+            alert('$alerta');
+            </script>";
+        setSesion();
         header('Location: index.php');
     }
 }
@@ -109,10 +128,10 @@ function validControl() {
 
 #region LogIn
 function logIn() {
-    global $id, $passw, $conn;
+    global $conn, $passw;
     try {
         $consult = $conn->prepare("SELECT pw FROM set_usuarios WHERE usuario=?");
-        $consult->bind_param("i", $id);
+        $consult->bind_param("i", $_SESSION["user"]);
         $consult->execute();
         $res = $consult->get_result();
         if ($res->num_rows > 0) {
@@ -192,11 +211,12 @@ function revisarDisp() {
 
 #region Agregar sesión
 function setSesion(){
-    global $conn;
+    global $conn, $passw;
     try{
-        $consult = $conn->prepare("INSERT INTO set_sesiones(usuario, sesion, fecha, token) 
-        VALUES (?, 'No', ?, ?)");
-        $consult->bind_param("iss", $_SESSION["user"], $_SESSION["fecha"], $_SESSION["token"]);
+        $consult = $conn->prepare("INSERT INTO set_sesiones(usuario, pw, sesion, dispositivo, fecha, token) 
+        VALUES (?, ?, 'No', ?, ?, ?)");
+        $disp = $_SESSION["ip"] . "/" . $_SESSION["so"] . "/" . $_SESSION["nav"];
+        $consult->bind_param("issss", $_SESSION["user"], $passw, $disp, $_SESSION["fecha"], $_SESSION["token"]);
         $consult->execute();
     }catch(Exception $ex){
         // err

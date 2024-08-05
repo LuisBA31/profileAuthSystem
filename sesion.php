@@ -1,6 +1,8 @@
 <?php
 session_start();
 
+date_default_timezone_set('America/Mexico_City');
+
 $user_agent = $_SERVER['HTTP_USER_AGENT'];
 // Token
 $_SESSION["token"] =  generarToken();
@@ -40,6 +42,7 @@ function obtenerIp(){
 function obtenerNavegador($user_agent){
     if (strpos($user_agent, 'Opera') || strpos($user_agent, 'OPR/')) return 'Opera';
     elseif (strpos($user_agent, 'Edge')) return 'Edge';
+    elseif (strpos($user_agent, 'Brave')) return 'Brave';
     elseif (strpos($user_agent, 'Chrome')) return 'Chrome';
     elseif (strpos($user_agent, 'Safari')) return 'Safari';
     elseif (strpos($user_agent, 'Firefox')) return 'Firefox';
@@ -86,8 +89,7 @@ function obtenerSO($user_agent){
 
 #region obtener fecha
 function obtenerFecha(){
-    date_default_timezone_set('America/Mexico_City');
-    $fecha = date('Y-m-d');
+    $fecha = date('d-m-Y');
     return $fecha;
 }
 #endregion

@@ -40,12 +40,14 @@
     <div class="card-header">
         Usuario
     </div>
+    <br>
     <div class="card-body">
         <h5 class="card-title">Información de usuario</h5>
         <?php
             // Se obtiene la información del usuario
             $usuario = array();
-            $usuario = obtenerInfo();
+            $usuario = obtenerInfoUsuario();
+            $sesion = ultimaSesion();
         ?>
         <br>
         <form id="infoForm" action="validacionInfoForm.php" onSubmit="return validarInfoForm()" class="row g-3" method="post"  enctype="multipart/form-data">
@@ -85,9 +87,55 @@
             <br>
         </form>
     </div>
-    <div class="card-footer text-muted">
+    <br>
+    </div>
+    <div class="card text-center">
+    <div class="card-header">
+        Dispositivos enlazados
+    </div>
+    <br>
+    <div class="card-body">
+        <h5 class="card-title">Información de dispositivos</h5>
+        <br>
+        <table class="table">
+            <thead>
+                <tr>
+                <th scope="col">#</th>
+                <th scope="col">IP</th>
+                <th scope="col">Sistema operativo</th>
+                <th scope="col">Navegador</th>
+                <th scope="col">Fecha de registro</th>
+                <th scope="col">Validado</th>
+                <th scope="col">En sesión</th>
+                <th scope="col">Eliminar</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php MostrarDispositivos() ?>
+            </tbody>
+        </table>
+    </div>
+    <br>
+    </div>
+    <div class="card text-center">
+    <div class="card-header">
+        Última sesión
+    </div>
+    <br>
+    <div class="card-body">
+        <p>
+        <a class="btn btn-outline-primary" data-bs-toggle="collapse" href="#ultimaSesion" role="button" aria-expanded="false" aria-controls="collapseExample">
+            Consultar
+        </a>
+        </p>
+        <div class="collapse" id="ultimaSesion">
+            <div class="card card-body">
+                <?php echo "Tu última sesión fué el $sesion" ?>
+            </div>
+        </div>
     </div>
     </div>
+    <div class="card-footer text-muted"><br></div>
     <script src="validacionInfoForm.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js" integrity="sha384-IQsoLXl5PILFhosVNubq5LC7Qb9DXgDA9i+tQ8Zj3iwWAwPtgFTxbJ8NT4GN1R8p" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.min.js" integrity="sha384-cVKIPhGWiC2Al4u+LWgxfKTRIcfu0JTxR+EQDz/bgldoEyl4H0zUF0QKbrJ0EcQF" crossorigin="anonymous"></script>
@@ -156,8 +204,8 @@ function sesionUsuario(){
 }
 #endregion
 
-#region mostrarInfo
-function obtenerInfo(){
+#region Obtener información de usuario
+function obtenerInfoUsuario(){
     global $conn;
     $infoUsuario = array();
 
@@ -168,7 +216,6 @@ function obtenerInfo(){
     $result = $consult->get_result();
 
     if ($result->num_rows > 0){
-        // Se encontró el usuario
         while ($row = $result->fetch_assoc()){
             $infoUsuario[] = is_null($row["nombre"]) || $row["nombre"] == "" ? "Nombre" : $row["nombre"];
             $infoUsuario[] = is_null($row["apPaterno"]) || $row["apPaterno"] == "" ? "Apellido paterno" : $row["apPaterno"];
@@ -176,11 +223,89 @@ function obtenerInfo(){
             $infoUsuario[] = is_null($row["telefono"]) || $row["telefono"] == "" || $row["telefono"] == "0" ? "Teléfono" : $row["telefono"];
             $infoUsuario[] = is_null($row["email"]) || $row["email"] == "" ? "Email" : $row["email"];
         }
-    } else {
-        // No hay registros
     }
     return $infoUsuario;
 }
+#endregion
+
+#region Obtener información de dispositivos
+function MostrarDispositivos(){
+    global $conn;
+    $n=0;
+    $class="";
+    $button="";
+
+    $queryDisp = "SELECT * FROM set_dispositivos WHERE usuario = ?";
+    $consult = $conn->prepare($queryDisp);
+    $consult->bind_param("i", $_SESSION["user"]);
+    $consult->execute();
+    $result = $consult->get_result();
+
+    if ($result->num_rows > 0){
+        while ($row = $result->fetch_assoc()){
+            $n++;
+            $class = $row["actual"] == "Si" ? "table-secondary" : "table-light";
+            $button = $row["actual"] == "Si" ? "'btn-close' disabled" : "'btn-close'" ;
+            echo 
+            "<tr class='$class'>
+            <th scope='row'>$n</th>
+            <td>".$row["ip"]."</td>
+            <td>".$row["so"]."</td> 
+            <td>".$row["nav"]."</td>
+            <td>".$row["fecha"]."</td>
+            <td>".$row["valid"]."</td>
+            <td>".$row["actual"]."</td>
+            <td>
+                <form id='dispForm' action='eliminarDisp.php' method='post'>
+                <input type='text' id='idDisp' name='idDisp' value=" . $row["idDisp"] . " required hidden>
+                <button type='submit' class=$button aria-label='Close'></button>
+                </form>
+            </td>
+            </tr>";
+        }
+    }
+}
+#endregion
+
+#region Obtener ultima sesión
+
+function ultimaSesion(){
+    global $conn;
+    $sesion="";
+    $id=0;
+    $aux=false;
+
+    $querySesion = "SELECT * FROM set_sesiones WHERE sesion='si' ORDER BY idSesion DESC LIMIT 2";
+    $consult = $conn->prepare($querySesion);
+    $consult->execute();
+    $result = $consult->get_result();
+
+    if ($result->num_rows > 0){
+        while ($row = $result->fetch_assoc()){
+            $id = $row["idSesion"];
+        }
+    }
+
+    $sesion = sesion($id);
+
+    return $sesion;
+}
+
+function sesion($id){
+    global $conn;
+    $querySesion = "SELECT * FROM set_sesiones WHERE idSesion=$id";
+    $consult = $conn->prepare($querySesion);
+    $consult->execute();
+    $result = $consult->get_result();
+
+    if ($result->num_rows > 0){
+        while ($row = $result->fetch_assoc()){
+            $info= $row["fecha"] . "<br> en el dispositivo:<br>" . $row["dispositivo"];
+        }
+    }
+    return $info;
+}
+
 #endregion
 
 #region Validar dominio
@@ -189,4 +314,5 @@ function domValid() {
     return $host === 'localhost' || $host === '127.0.0.1';
 }
 #endregion
+
 ?>

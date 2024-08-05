@@ -12,7 +12,7 @@
     - El archivo de base de datos se encuentra como: login.sql
     - Conéctate a tu servidor de base de datos.
     - Crea una base de datos con el mismo nombre que la base de datos a importar.
-    - Importa la base de datos y selecciona el archivo: login.sql.
+    - Importa la base de datos y selecciona el archivo: login.sql
     - Inicia la importación.
 
 ## Creación de usuarios
