@@ -49,10 +49,10 @@ function validDatos(){
 
 #region Control
 function validControl() {
-    if (logIn()) {
+    // Se verifica que no exceda las 4 sesiones
+    if (revisarSesion()){
+        if (logIn()) {
         // Usuario y contraseña válidos
-        // Se verifica que no exceda las 4 sesiones
-        if (revisarSesion()){
             // El usuario se encuentra libre de sesiones
             // Se actualiza el token
             actualizarToken();
@@ -95,15 +95,14 @@ function validControl() {
                     break;
             }
         }else{
-            // Excedió los 4 intentos
-            $_SESSION["err"] = "Se han excedido los 4 intentos de sesión";
-            // Se registra la sesión
+            // Se agrega la sesión y regrsa al Login
+            $_SESSION["err"] = "Usuario o contraseña incorrectos";
             setSesion();
             header('Location: index.php');
         }
     } else {
-        // Se agrega la sesión y regrsa al Login
-        $_SESSION["err"] = "Usuario o contraseña incorrectos";
+        // Excedió los 4 intentos
+        $_SESSION["err"] = "Se han excedido los 4 intentos de sesión con este usuario";
         setSesion();
         header('Location: index.php');
     }
