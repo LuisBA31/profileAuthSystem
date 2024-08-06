@@ -51,6 +51,7 @@
         ?>
         <br>
         <form id="infoForm" action="validacionInfoForm.php" onSubmit="return validarInfoForm()" class="row g-3" method="post"  enctype="multipart/form-data">
+            <input type="text" id="token" name="token" value=<?php echo $_SESSION["token"] ?> required hidden>
             <div class="col-md-4">
                 <label for="nombre" class="form-label">Nombre</label>
                 <?php echo"<input type='text' class='form-control' id='nombre' name='nombre' value='". $usuario[0] ."' required>"; ?>

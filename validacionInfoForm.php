@@ -9,9 +9,11 @@ $app = filter_input(INPUT_POST,'app', FILTER_SANITIZE_STRING);
 $apm = filter_input(INPUT_POST,'apm', FILTER_SANITIZE_STRING);
 $tel = filter_input(INPUT_POST,'tel', FILTER_SANITIZE_NUMBER_INT);
 $email = filter_input(INPUT_POST,'email', FILTER_SANITIZE_EMAIL);
+// Token enlazado al formulario
+$tok = filter_input(INPUT_POST,'token', FILTER_SANITIZE_STRING);
 
 // Verificación de dominio y petición
-if (domValid() || $_SERVER['REQUEST_METHOD'] !== 'POST') {
+if (domValid() && $_SERVER['REQUEST_METHOD'] === 'POST' && $tok === $_SESSION["token"]) {
     if (datosValidos()){
         // Los datos ingresados son válidos
         infoControl();
