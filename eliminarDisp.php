@@ -16,7 +16,7 @@ try{
     $result = $consult->get_result();
     if ($result->num_rows > 0){
         while ($row = $result->fetch_assoc()){
-            if ($row["token"] != $_SESSION["token"]){
+            if ($row["token"] != $_SESSION["token"] && $row["usuario"] == $_SESSION["user"]){
                 if ($row["actual"] == "No"){
                     eliminar($idDisp);
                 }
