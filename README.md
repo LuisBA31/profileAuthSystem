@@ -77,25 +77,25 @@ Asegúrate de configurar correctamente el archivo `mysqlConn.php` con tus creden
 
 ## Estructura del Proyecto
 
-/.gitattributes - Archivo de configuración para atributos de Git.
-cerrarSesion.php - Script para cerrar sesión de usuario.
-eliminarDisp.php - Script para eliminar dispositivos.
-estilos.css - Archivo de estilos CSS.
-index.php - Página de inicio del proyecto.
-login.sql - Script SQL para la base de datos de inicio de sesión.
-loginForm.php - Formulario de inicio de sesión.
-mysqlConn.php - Archivo de conexión a la base de datos MySQL.
-obtenerImagen.php - Script para obtener imágenes.
-pinForm.php - Formulario para ingreso de PIN.
-principal.php - Página principal del sistema.
-README.md - Archivo README del proyecto.
-sesion.php - Script de gestión de sesiones.
-validacionForm.js - Archivo JavaScript para validación de formularios.
-validacionForm.php - Script PHP para validación de formularios.
-validacionInfoForm.js - Archivo JavaScript para validación de información de formularios.
-validacionInfoForm.php - Script PHP para validación de información de formularios.
-validacionPin.js - Archivo JavaScript para validación de PIN.
-validacionPin.php - Script PHP para validación de PIN.
+- .gitattributes - Archivo de configuración para atributos de Git.
+- cerrarSesion.php - Script para cerrar sesión de usuario.
+- eliminarDisp.php - Script para eliminar dispositivos.
+- estilos.css - Archivo de estilos CSS.
+- index.php - Página de inicio del proyecto.
+- login.sql - Script SQL para la base de datos de inicio de sesión.
+- loginForm.php - Formulario de inicio de sesión.
+- mysqlConn.php - Archivo de conexión a la base de datos MySQL.
+- obtenerImagen.php - Script para obtener imágenes.
+- pinForm.php - Formulario para ingreso de PIN.
+- principal.php - Página principal del sistema.
+- README.md - Archivo README del proyecto.
+- sesion.php - Script de gestión de sesiones.
+- validacionForm.js - Archivo JavaScript para validación de formularios.
+- validacionForm.php - Script PHP para validación de formularios.
+- validacionInfoForm.js - Archivo JavaScript para validación de información de formularios.
+- validacionInfoForm.php - Script PHP para validación de información de formularios.
+- validacionPin.js - Archivo JavaScript para validación de PIN.
+- validacionPin.php - Script PHP para validación de PIN.
 
 ## Tecnologías utilizadas
 
