@@ -258,7 +258,7 @@ function MostrarDispositivos(){
             <td>".$row["actual"]."</td>
             <td>
                 <form id='dispForm' action='eliminarDisp.php' method='post'>
-                <input type='text' id='idDisp' name='idDisp' value=" . $row["idDisp"] . " required hidden>
+                <input type='text' id='tokenDisp' name='tokenDisp' value=" . $row["token"] . " required hidden>
                 <button type='submit' class=$button aria-label='Close'></button>
                 </form>
             </td>

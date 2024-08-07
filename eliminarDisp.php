@@ -3,14 +3,14 @@
 include 'mysqlConn.php';
 session_start();
 
-$idDisp= filter_input(INPUT_POST,'idDisp', FILTER_SANITIZE_NUMBER_INT);
+$tokenDisp= filter_input(INPUT_POST,'tokenDisp', FILTER_SANITIZE_STRING);
 
 $alerta = "Error";
 
 try{
-    $queryDisp = "SELECT * FROM set_dispositivos WHERE idDisp = ?";
+    $queryDisp = "SELECT * FROM set_dispositivos WHERE token = ?";
     $consult = $conn->prepare($queryDisp);
-    $consult->bind_param("i", $idDisp);
+    $consult->bind_param("s", $tokenDisp);
     $consult->execute();
 
     $result = $consult->get_result();
@@ -18,7 +18,7 @@ try{
         while ($row = $result->fetch_assoc()){
             if ($row["token"] != $_SESSION["token"] && $row["usuario"] == $_SESSION["user"]){
                 if ($row["actual"] == "No"){
-                    eliminar($idDisp);
+                    eliminar($tokenDisp);
                 }
             }
         }
@@ -32,12 +32,12 @@ header('Location: principal.php');
 // Función -------------------------------------------------
 
 #region Eliminar dispositivo
-function eliminar($id){
+function eliminar($token){
     global $conn;
     try{
-        $queryElim = "DELETE FROM set_dispositivos WHERE idDisp=?";
+        $queryElim = "DELETE FROM set_dispositivos WHERE token=?";
         $con = $conn->prepare($queryElim);
-        $con->bind_param("i", $id);
+        $con->bind_param("s", $token);
         $con->execute();
     }catch(Exception $ex){
         // err
