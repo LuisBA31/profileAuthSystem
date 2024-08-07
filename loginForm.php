@@ -64,6 +64,7 @@
                 });
             </script>
             ";
+            $_SESSION["err"] = "";
         }
     ?>
 </body>
